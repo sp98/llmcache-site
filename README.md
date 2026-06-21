@@ -27,6 +27,7 @@ With llmcache:
 ## Prerequisites
 
 - [Claude Code](https://docs.anthropic.com/en/docs/claude-code) (only supported client)
+- [Git](https://git-scm.com/) (used for cache invalidation)
 - One of:
   - Anthropic API key (`ANTHROPIC_API_KEY`)
   - GCP project with Vertex AI API enabled + `gcloud auth application-default login`
@@ -60,7 +61,7 @@ sudo mv llmcache /usr/local/bin/
 
 Summaries auto-invalidate when the file's git hash changes.
 
-## Solo Setup (Free)
+## Setup
 
 Local cache stored in SQLite. No server, no license key needed.
 
@@ -130,61 +131,9 @@ Optional settings via env vars or `~/.llmcache/config.yaml`:
 | `LLMCACHE_LOG_DIR` | `~/.llmcache/` | Log directory |
 | `LLMCACHE_SUMMARY_MODEL` | `claude-haiku-4-5@20251001` | Model for generating summaries |
 
-## Team Setup (Paid)
+## Team Mode (Coming Soon)
 
-Shared cache backed by Postgres so multiple developers share summaries across the team. Requires a license key.
-
-**Why Team mode?** In Solo mode, each developer builds their own cache from scratch. When developer A understands a file, developer B still pays full tokens to understand the same file. With Team mode, summaries are shared: one developer pays the generation cost, everyone else gets instant cache hits. The more developers on the team, the faster the cache warms up and the greater the savings. On a typical team, the shared cache reaches 90%+ hit rate within days.
-
-**Pre-indexing repositories.** Admins can pre-index repositories so the cache is warm before developers start working:
-
-```bash
-llmcache index /path/to/repo -w 10
-```
-
-Developers get instant cache hits from their first session, with zero cold-start cost.
-
-### Server setup (admin)
-
-The team admin runs the llmcache team server connected to a Postgres database:
-
-```bash
-llmcache team --listen :8090 --db-url "postgres://user:pass@host:5432/llmcache?sslmode=disable"
-```
-
-Required env vars on the server:
-
-| Env Var | Description |
-|---------|-------------|
-| `LLMCACHE_LICENSE_KEY` | License key (provided on purchase) |
-| `LLMCACHE_TEAM_API_KEY` | API key for authenticating clients |
-
-The server creates its tables on first start. Admin dashboard is available at `http://<server>:8090/admin/`.
-
-### Developer setup
-
-Each developer installs the llmcache binary (see Install above), then connects to the team server.
-
-**1. Connect to the team server**
-
-Your team admin will provide the server URL, API key, and license key.
-
-```bash
-claude mcp add \
-  --env LLMCACHE_TEAM_SERVER_URL=<server-url> \
-  --env LLMCACHE_TEAM_API_KEY=<api-key> \
-  --env LLMCACHE_LICENSE_KEY=<license-key> \
-  --env CLOUD_ML_REGION=us-east5 \
-  --transport stdio llmcache -- llmcache mcp
-```
-
-**2. Add the Read hook and CLAUDE.md instruction**
-
-Same as Solo Setup steps 2 and 3 above.
-
-**3. Verify**
-
-Restart Claude Code after setup. Verify with `llmcache stats`. Should show **Team Cache Savings**.
+In Solo mode, each developer builds their own cache from scratch. When developer A understands a file, developer B still pays full tokens to understand the same file. With Team mode, summaries are shared: one developer pays the generation cost, everyone else gets instant cache hits. The more developers on the team, the faster the cache warms up and the greater the savings.
 
 ## CLI Commands
 
